@@ -28,4 +28,5 @@ public class Task {
 
     public int getRevenue() {
         return revenue;
-    }}
+    }
+}

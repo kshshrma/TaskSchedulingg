@@ -2,7 +2,7 @@ package app;
 
 import db.TaskStore;
 import model.Task;
-import planner.TaskPlanner;
+import planner.TaskPlannerDP;
 
 import java.util.List;
 import java.util.Scanner;
@@ -13,73 +13,100 @@ public class AppRunner {
 
         Scanner sc = new Scanner(System.in);
         TaskStore store = new TaskStore();
-        TaskPlanner planner = new TaskPlanner();
+        TaskPlannerDP planner = new TaskPlannerDP();
 
         while (true) {
 
             System.out.println("\n1. Add Task");
-            System.out.println("2. Generate Weekly Schedule");
-            System.out.println("3. Exit");
+            System.out.println("2. View All Tasks");
+            System.out.println("3. Delete Task");
+            System.out.println("4. Calculate Optimal Revenue (DP)");
+            System.out.println("5. Exit");
             System.out.print("Choose option: ");
 
-            String choiceInput = sc.nextLine().trim();
+            String input = sc.nextLine().trim();
 
-            if (!choiceInput.matches("[1-3]")) {
-                System.out.println("❌ Invalid option. Enter 1, 2 or 3 only.");
+            if (!input.matches("[1-5]")) {
+                System.out.println("❌ Enter a valid option (1–5)");
                 continue;
             }
 
-            int choice = Integer.parseInt(choiceInput);
+            int choice = Integer.parseInt(input);
 
-            // ---------- OPTION 1 ----------
+            // ADD TASK
             if (choice == 1) {
 
                 System.out.print("Task title: ");
                 String title = sc.nextLine();
 
                 System.out.print("Deadline (1-5): ");
-                String deadlineInput = sc.nextLine();
-                if (!deadlineInput.matches("[1-5]")) {
-                    System.out.println("❌ Deadline must be between 1 and 5.");
+                String d = sc.nextLine();
+                if (!d.matches("[1-5]")) {
+                    System.out.println("❌ Invalid deadline");
                     continue;
                 }
-                int deadline = Integer.parseInt(deadlineInput);
 
                 System.out.print("Revenue: ");
-                String revenueInput = sc.nextLine();
-                if (!revenueInput.matches("\\d+")) {
-                    System.out.println("❌ Revenue must be a number.");
+                String r = sc.nextLine();
+                if (!r.matches("\\d+")) {
+                    System.out.println("❌ Invalid revenue");
                     continue;
                 }
-                int revenue = Integer.parseInt(revenueInput);
 
-                store.addTask(title, deadline, revenue);
+                store.addTask(title, Integer.parseInt(d), Integer.parseInt(r));
                 System.out.println("✅ Task added successfully.");
-
             }
-            // ---------- OPTION 2 ----------
+
+            // VIEW TASKS
             else if (choice == 2) {
 
                 List<Task> tasks = store.fetchAllTasks();
-                Task[] week = planner.planWeek(tasks);
 
-                String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
-                int totalRevenue = 0;
-
-                System.out.println("\n--- Weekly Schedule ---");
-                for (int i = 0; i < 5; i++) {
-                    if (week[i] != null) {
-                        System.out.println(days[i] + ": " +
-                                week[i].getTitle() + " | ₹" + week[i].getRevenue());
-                        totalRevenue += week[i].getRevenue();
-                    } else {
-                        System.out.println(days[i] + ": Free");
-                    }
+                if (tasks.isEmpty()) {
+                    System.out.println("No tasks found.");
+                    continue;
                 }
 
-                System.out.println("Total Revenue: ₹" + totalRevenue);
+                System.out.println("\n--- TASK LIST ---");
+                for (Task t : tasks) {
+                    System.out.println(
+                            "ID: " + t.getId() +
+                                    ", Title: " + t.getTitle() +
+                                    ", Deadline: " + t.getDeadline() +
+                                    ", Revenue: ₹" + t.getRevenue()
+                    );
+                }
             }
-            // ---------- OPTION 3 ----------
+
+            // DELETE TASK
+            else if (choice == 3) {
+
+                System.out.print("Enter Task ID to delete: ");
+                String idInput = sc.nextLine();
+
+                if (!idInput.matches("\\d+")) {
+                    System.out.println("❌ Invalid ID");
+                    continue;
+                }
+
+                store.deleteTask(Integer.parseInt(idInput));
+            }
+
+            // DP CALCULATION
+            else if (choice == 4) {
+
+                List<Task> tasks = store.fetchAllTasks();
+
+                if (tasks.isEmpty()) {
+                    System.out.println("No tasks available.");
+                    continue;
+                }
+
+                int maxRevenue = planner.calculateMaxRevenue(tasks);
+                System.out.println("\n✅ Maximum Revenue (DP): ₹" + maxRevenue);
+            }
+
+            // EXIT
             else {
                 System.out.println("Exiting program.");
                 break;

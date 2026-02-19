@@ -20,7 +20,9 @@ public class TaskStore {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
+    // ADD TASK
     public void addTask(String title, int deadline, int revenue) {
+
         String sql = "INSERT INTO projects(title, deadline, revenue) VALUES (?, ?, ?)";
 
         try (Connection con = getConnection();
@@ -36,22 +38,23 @@ public class TaskStore {
         }
     }
 
+    // VIEW TASKS
     public List<Task> fetchAllTasks() {
+
         List<Task> tasks = new ArrayList<>();
-        String sql = "SELECT * FROM projects";
+        String sql = "SELECT * FROM projects ORDER BY project_id";
 
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Task task = new Task(
+                tasks.add(new Task(
                         rs.getInt("project_id"),
                         rs.getString("title"),
                         rs.getInt("deadline"),
                         rs.getInt("revenue")
-                );
-                tasks.add(task);
+                ));
             }
 
         } catch (Exception e) {
@@ -59,5 +62,27 @@ public class TaskStore {
         }
 
         return tasks;
+    }
+
+    // DELETE TASK
+    public void deleteTask(int id) {
+
+        String sql = "DELETE FROM projects WHERE project_id = ?";
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("✅ Task deleted successfully.");
+            } else {
+                System.out.println("❌ Task not found.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
